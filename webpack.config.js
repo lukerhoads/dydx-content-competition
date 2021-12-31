@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin")
 const CopyPlugin = require("copy-webpack-plugin")
 
 const port = process.env.PORT || 3000
+const isProd = process.env.NODE_ENV === 'production'
 
 const copyPluginPatterns = {
     patterns: [
@@ -12,14 +13,24 @@ const copyPluginPatterns = {
     ]
 };
 
-module.exports = {
-    mode: 'development',
-    entry: "./src/index.tsx",
+const config = {
+    target: 'node',
+    mode: isProd ? 'production' : 'development',
+    entry: {
+        index: "./src/index.tsx",
+    },
+    output: {
+        path: path.resolve(__dirname, "dist"),
+        filename: "bundle.js",
+    },
+    resolve: {
+        extensions: [".tsx", ".ts", ".js"],
+    },
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
-                use: "ts-loader",
+                test: /\.(ts|tsx)?$/,
+                use: "babel-loader",
                 exclude: /node_modules/,
             },
             {
@@ -56,13 +67,6 @@ module.exports = {
             },
         ],
     },
-    resolve: {
-        extensions: [".tsx", ".ts", ".js"],
-    },
-    output: {
-        path: path.resolve(__dirname, "dist"),
-        filename: "bundle.js",
-    },
     plugins: [
         new HtmlWebpackPlugin({
             template: './src/index.html',
@@ -70,10 +74,27 @@ module.exports = {
             minify: false,
         }),
         new CopyPlugin(copyPluginPatterns)
-    ],
-    devServer: {
-        static: path.join(__dirname, "dist"),
-        compress: true,
-        port: port,
-    },
+    ]
 }
+
+if (isProd) {
+    config.optimization = {
+      minimizer: [
+            new TerserWebpackPlugin(),
+      ],
+    };
+  } else {
+    // for more information, see https://webpack.js.org/configuration/dev-server
+    config.devServer = {
+        port: 3000,
+        open: true,
+        hot: true,
+        compress: true,
+        client: {
+            overlay: true,
+        }
+    }
+    config.stats = 'errors-only'
+  }
+
+  module.exports = config

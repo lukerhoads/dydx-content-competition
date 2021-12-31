@@ -1,6 +1,6 @@
-import { makeAutoObservable } from "mobx";
+import { computed, makeAutoObservable, makeObservable, observable, ObservableMap } from "mobx";
 import { BTC, Market } from "../types/market";
-
+import { DydxClient } from '@dydxprotocol/v3-client'
 export class Store {
     market: Market = BTC
     quoteBalance: number = 0
@@ -10,7 +10,19 @@ export class Store {
     incrementalLeverage: number = 0
     
     constructor() {
-        makeAutoObservable(this)
+        makeObservable(this, {
+            market: observable,
+            quoteBalance: observable,
+            leverage: observable,
+            orderSize: observable,
+            assetPrice: observable,
+            incrementalLeverage: observable,
+            initialMarginRequirement: computed,
+            maintenanceMarginRequirement: computed,
+            totalAccountValue: computed,
+            freeCollateral: computed,
+            liquidationPrice: computed,
+        })
     }
 
     get initialMarginRequirement() {
@@ -36,7 +48,12 @@ export class Store {
 
         const long = this.orderSize > 0
         const mvw = (this.market.maintenanceMarginFraction * this.totalAccountValue) / this.maintenanceMarginRequirement
-        return this.assetPrice * (long ? 1 - mvw : 1 + mvw)
+        const priceDelta = this.assetPrice * (long ? 1 - mvw : 1 + mvw)
+        if (!priceDelta) {
+            return 0
+        }
+
+        return this.assetPrice + priceDelta
     }
 
     setMarket(market: Market) {

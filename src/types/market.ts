@@ -1,5 +1,8 @@
+import { DydxMarket } from "@dydxprotocol/starkex-lib"
+
 export interface Market {
     name: string
+    market: DydxMarket
     initialMarginFraction: number 
     maintenanceMarginFraction: number 
     
@@ -11,6 +14,7 @@ export interface Market {
 
 export const BTC: Market = {
     name: 'BTC',
+    market: DydxMarket.BTC_USD,
     initialMarginFraction: 1/25,
     maintenanceMarginFraction: 3/100,
     baselinePositionSize: 9,
@@ -21,6 +25,7 @@ export const BTC: Market = {
 
 export const ETH: Market = {
     name: 'ETH',
+    market: DydxMarket.ETH_USD,
     initialMarginFraction: 1/25,
     maintenanceMarginFraction: 3/100,
     baselinePositionSize: 140,

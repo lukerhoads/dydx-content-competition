@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import "./Input.scss"
 
 export interface InputProps {
@@ -21,7 +21,6 @@ export const Input = (props: InputProps) => {
                     value={props.value}
                     placeholder={props.placeholder}
                     onChange={e => props.onChange(e)}
-                    onKeyPress={e => console.log("key")} 
                     />
             </div>
         </div>
