@@ -1,6 +1,6 @@
 # DYDX Risk Calculator
 
-Risk calculator for https://dydx.exchange built in React.
+Risk calculator for https://dydx.exchange built in React. DO NOT expect anything to work.
 
 ## Details
 - Font: Inter
