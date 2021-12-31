@@ -1,6 +1,7 @@
 const path = require("path")
 const HtmlWebpackPlugin = require("html-webpack-plugin")
 const CopyPlugin = require("copy-webpack-plugin")
+const nodeExternals = require("webpack-node-externals")
 
 const port = process.env.PORT || 3000
 const isProd = process.env.NODE_ENV === 'production'
@@ -14,7 +15,9 @@ const copyPluginPatterns = {
 };
 
 const config = {
-    target: 'node',
+    // target: 'node',
+    // externalsPresets: { node: true },
+    // externals: [nodeExternals()],
     mode: isProd ? 'production' : 'development',
     entry: {
         index: "./src/index.tsx",
@@ -24,15 +27,21 @@ const config = {
         filename: "bundle.js",
     },
     resolve: {
-        extensions: [".tsx", ".ts", ".js"],
+        extensions: [".tsx", ".ts", ".js", ".jsx"],
     },
     module: {
         rules: [
             {
-                test: /\.(ts|tsx)?$/,
-                use: "babel-loader",
-                exclude: /node_modules/,
+                test: /\.tsx?$/,
+                loader: "babel-loader",
+                exclude: '/node_modules/'
             },
+            // {
+            //     test: /\.ts?$/,
+            //     use: "babel-loader",
+            //     // include: '/node_modules/@dydxprotocol/v3-client',
+            //     exclude: '/node_modules/',
+            // },
             {
                 test: /\.scss$/,
                 use: [
@@ -74,7 +83,7 @@ const config = {
             minify: false,
         }),
         new CopyPlugin(copyPluginPatterns)
-    ]
+    ],
 }
 
 if (isProd) {

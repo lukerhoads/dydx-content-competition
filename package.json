@@ -6,7 +6,8 @@
   "scripts": {
     "check-types": "tsc",
     "dev": "cross-env NODE_ENV=development webpack-dev-server --color --progress",
-    "build": "cross-env NODE_ENV=production webpack --color --progress"
+    "build": "cross-env NODE_ENV=production webpack --color --progress",
+    "test": "jest"
   },
   "license": "ISC",
   "devDependencies": {
@@ -17,33 +18,40 @@
     "@babel/preset-react": "^7.16.7",
     "@babel/preset-typescript": "^7.16.7",
     "@babel/runtime": "^7.16.7",
+    "@types/axios": "^0.14.0",
+    "@types/jest": "^27.4.0",
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
     "@types/webpack-dev-server": "^4.5.0",
+    "@types/webpack-node-externals": "^2.5.3",
     "babel-loader": "^8.2.3",
     "copy-webpack-plugin": "^10.2.0",
     "css-loader": "^6.5.1",
+    "eslint": "^8.5.0",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.5.0",
+    "jest": "^27.4.5",
     "postcss": "^8.4.5",
     "postcss-loader": "^6.2.1",
     "postcss-preset-env": "^7.1.0",
     "sass": "^1.45.2",
     "sass-loader": "^12.4.0",
     "style-loader": "^3.3.1",
+    "ts-jest": "^27.1.2",
     "ts-loader": "^9.2.6",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.4",
     "webpack": "^5.65.0",
     "webpack-cli": "^4.9.1",
-    "webpack-dev-server": "^4.7.2"
+    "webpack-dev-server": "^4.7.2",
+    "webpack-node-externals": "^3.0.0"
   },
   "dependencies": {
-    "@dydxprotocol/starkex-lib": "^1.1.5",
-    "@dydxprotocol/v3-client": "^1.5.11",
+    "axios": "^0.24.0",
     "cross-env": "^7.0.3",
     "mobx": "^6.3.10",
     "mobx-react": "^7.2.1",
+    "mobx-react-lite": "^3.2.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "terser-webpack-plugin": "^5.3.0"

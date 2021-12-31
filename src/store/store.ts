@@ -1,16 +1,18 @@
-import { computed, makeAutoObservable, makeObservable, observable, ObservableMap } from "mobx";
+import { computed, makeObservable, observable } from "mobx";
 import { BTC, Market } from "../types/market";
-import { DydxClient } from '@dydxprotocol/v3-client'
+
 export class Store {
+    error: string
     market: Market = BTC
     quoteBalance: number = 0
     leverage: number = 1
     orderSize: number = 0 // negative if short
-    assetPrice: number = 0
+    assetPrice: number = 10000
     incrementalLeverage: number = 0
     
     constructor() {
         makeObservable(this, {
+            error: observable,
             market: observable,
             quoteBalance: observable,
             leverage: observable,
@@ -25,8 +27,16 @@ export class Store {
         })
     }
 
+    get marginFraction() {
+        return 1/this.leverage
+    }
+
     get initialMarginRequirement() {
         return Math.abs(this.orderSize * this.assetPrice * this.market.initialMarginFraction)
+    }
+
+    get marginRequirement() {
+        return Math.abs(this.orderSize * this.assetPrice * this.marginFraction)
     }
 
     get maintenanceMarginRequirement() {
@@ -34,7 +44,7 @@ export class Store {
     }
 
     get totalAccountValue() {
-        return this.initialMarginRequirement + (this.orderSize * this.assetPrice)
+        return this.quoteBalance + (this.orderSize * this.assetPrice)
     }
 
     get freeCollateral() {
@@ -62,10 +72,12 @@ export class Store {
 
     setQuoteBalance(balance: number) {
         this.quoteBalance = balance 
+        this.setOrderSize((balance / this.assetPrice) * this.leverage)
     }
 
     setLeverage(leverage: number) {
         this.leverage = leverage 
+        this.setOrderSize((this.quoteBalance / this.assetPrice) * leverage)
     }
 
     setAssetPrice(assetPrice: number) {
@@ -73,14 +85,12 @@ export class Store {
     }
 
     setOrderSize(size: number) {
-        if (size > this.market.maximumPositionSize) {
-            throw new Error(`Maximum position size for asset ${this.market.name} reached`)
-        }
-
         if (size > this.market.baselinePositionSize) {
             const outstandingSize = size - this.market.baselinePositionSize
             const hitTicks = Math.floor(outstandingSize / this.market.incrementalPositionSize)
             this.incrementalLeverage += (hitTicks * this.market.incrementalMarginFraction)
+        } else {
+            this.incrementalLeverage = 0
         }
 
         this.orderSize = size 

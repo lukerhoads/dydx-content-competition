@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Input } from './components/Input/Input'
 import { Slider } from './components/Slider/Slider'
 import './scss/app.scss'
@@ -7,10 +7,12 @@ import { observer } from 'mobx-react'
 import { Store } from './store/store'
 import { BTC, ETH } from './types/market'
 // import { DydxClient } from '@dydxprotocol/v3-client'
-import Public from '@dydxprotocol/v3-client/src/modules/public'
+// import Public from '@dydxprotocol/v3-client/src/modules/public'
 // Will retrieve latest price according to websocket
+import Dydx from './adapters/dydx'
 
-const dydxPublic = new Public("https://api.dydx.exchange")
+const dydxPublic = new Dydx("https://api.dydx.exchange")
+// const dydxPublic = new Public("https://api.dydx.exchange")
 // const dydxPublic = new DydxClient("https://api.dydx.exchange").public
 
 // Fields for:
@@ -21,40 +23,45 @@ const dydxPublic = new Public("https://api.dydx.exchange")
 // - Add price volatity of asset over last 30 days
 
 export const App = observer(({ store }: { store: Store }) => {
+    const [error, setError] = useState("")
+    const [priceLoading, setPriceLoading] = useState(true)
+    const [oraclePrice, setOraclePrice] = useState(store.assetPrice)
     const marketKey = `${store.market.name}-USD`
     // const dydxPublic = useMemo(() => {
     //     return new DydxClient("https://api.dydx.exchange").public
     // }, [])
 
+    const fetchOraclePrice = async () => {
+        const market = await dydxPublic.getMarkets(store.market.market)
+        const price = Number(market.markets[marketKey].oraclePrice)
+        store.setAssetPrice(price)
+        setOraclePrice(price)
+    }
+
     useEffect(() => {
-        let oraclePrice: number
-        const fetchOraclePrice = async () => {
-            const market = await dydxPublic.getMarkets(store.market.market)
-            oraclePrice = Number(market.markets[marketKey].oraclePrice)
-        }
-        store.setAssetPrice(oraclePrice)
+        fetchOraclePrice()
+    }, [])
+
+    useEffect(() => {
         const interval = setInterval(async () => {
-            const market = await dydxPublic.getMarkets(store.market.market)
-            store.setAssetPrice(Number(market.markets[marketKey].oraclePrice))
+            await fetchOraclePrice()
         }, 10000);
         return () => clearInterval(interval);
     }, []);
 
     const onAssetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        // Fetch price from oracle, set store to new market
-
         if (e.target.value === 'BTC') {
             store.setMarket(BTC)
         }
 
         if (e.target.value === 'ETH') {
+            console.log("Setting eth")
             store.setMarket(ETH)
         }
     }
 
     const onCollateralChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         store.setQuoteBalance(Number(e.target.value))
-        console.log(store.initialMarginRequirement)
     }
 
     const onSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +69,15 @@ export const App = observer(({ store }: { store: Store }) => {
     }
 
     const onOrderSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        store.setOrderSize(Number(e.target.value))
+        console.log(parseInt('-25512'))
+        console.log(e.target.value)
+        const parsed = parseInt(e.target.value)
+        if (Math.abs(parsed) > store.market.maximumPositionSize) {
+            setError(`Maximum position size of ${store.market.maximumPositionSize} for ${store.market.name} reached`)
+        } else {
+            setError('')
+        }
+        store.setOrderSize(parsed)
     }
 
     const maxMargin = 1/store.market.initialMarginFraction
@@ -99,19 +114,23 @@ export const App = observer(({ store }: { store: Store }) => {
                             onChange={onCollateralChange}
                             />
                         <Input
-                            label='Order Size'
+                            label='Order Size (negative if short)'
                             placeholder='0.00'
                             value={store.orderSize.toString()}
                             onChange={onOrderSizeChange}
                             />
+                        <span className="error">{error}</span>
+                        <span>{priceLoading ? 'Price loading' : ''}</span>
                     </div>
                     <div className="results">
-                        <h3>Adjusted leverage: {store.leverage + store.incrementalLeverage}x</h3>
-                        <h3>Initial Margin Requirement: ${store.initialMarginRequirement}</h3>
-                        <h3>Maintenance Margin Requirement: ${store.maintenanceMarginRequirement}</h3>
-                        <h3>Total Account Value: ${store.totalAccountValue}</h3>
-                        <h3>Free Collateral: ${store.freeCollateral}</h3>
-                        <h3>Liquidation price: ${store.liquidationPrice}</h3>
+                        <p>Current {store.market.name} perp price: <b>${oraclePrice}</b></p>
+                        <p>Adjusted leverage: <b>{store.leverage + store.incrementalLeverage}x</b></p>
+                        <p>Initial Margin Requirement: <b>${store.initialMarginRequirement}</b></p>
+                        {/* <p>Margin Requirement: <b>${store.marginRequirement}</b></p> */}
+                        <p>Maintenance Margin Requirement: <b>${store.maintenanceMarginRequirement}</b></p>
+                        <p>Total Account Value: <b>${store.totalAccountValue}</b></p>
+                        <p>Free Collateral: <b>${store.freeCollateral}</b></p>
+                        <p>Liquidation price: <b>${store.liquidationPrice}</b></p>
                     </div>
                 </div>
             </div>

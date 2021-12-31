@@ -15,6 +15,10 @@
     max-width: 760px;
 }
 
+.error {
+    color: red;
+}
+
 .main-board {
     margin-top: 5px;
     display: flex;
@@ -47,3 +51,6 @@
     letter-spacing: 4px;
 }
 
+.results p {
+    color: white;
+}
